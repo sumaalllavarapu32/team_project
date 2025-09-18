@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agriculture Market Connect</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5faf5;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #2a7f4f;
+      color: #fff;
+      text-align: center;
+      padding: 1.5rem 0;
+      font-size: 1.8rem;
+    }
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 2rem auto;
+      max-width: 800px;
+      padding: 0 1rem;
+    }
+    section {
+      background: #fff;
+      padding: 1.8rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      width: 100%;
+      box-shadow: 0 2px 8px rgba(42,127,79,0.12);
+    }
+    h2 {
+      color: #2a7f4f;
+      margin-bottom: 1rem;
+    }
+    input, button {
+      margin: 0.5rem 0.25rem;
+      padding: 0.6rem;
+      border: 1px solid #2a7f4f;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    input {
+      width: calc(33% - 0.5rem);
+      box-sizing: border-box;
+    }
+    button {
+      background: #2a7f4f;
+      color: #fff;
+      cursor: pointer;
+      width: 100%;
+      max-width: 120px;
+    }
+    #product-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .product-card {
+      background: #e7fbe7;
+      padding: 1rem;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(42,127,79,0.08);
+      transition: box-shadow 0.3s ease;
+    }
+    .product-card:hover {
+      box-shadow: 0 4px 10px rgba(42,127,79,0.2);
+    }
+    .product-card h3 {
+      margin-top: 0;
+      color: #1d592f;
+    }
+    .product-card p {
+      margin: 0.3rem 0;
+      font-weight: 600;
+      color: #2a7f4f;
+    }
+
+    /* Feedback styles */
+    .feedback {
+      color: red;
+      font-size: 0.85rem;
+      margin-top: -0.4rem;
+      margin-bottom: 0.5rem;
+      height: 1em;
+    }
+    input.invalid {
+      border-color: red;
+    }
+  </style>
+</head>
+<body>
+  <header>Agriculture Market Connect</header>
+  <main>
+    <section id="product-form-section">
+      <h2>Add Your Product</h2>
+      <form id="product-form" autocomplete="off" novalidate>
+        <input type="text" id="name" placeholder="Product Name" required />
+        <div id="nameFeedback" class="feedback"></div>
+
+        <input type="number" id="price" placeholder="Price (₹)" min="1" required />
+        <div id="priceFeedback" class="feedback"></div>
+
+        <input type="text" id="location" placeholder="Location" required />
+        <div id="locationFeedback" class="feedback"></div>
+
+        <button type="submit">Add Product</button>
+      </form>
+    </section>
+    <section id="market-list-section">
+      <h2>Available Products</h2>
+      <div id="product-list"></div>
+    </section>
+  </main>
+  <script>
+    const productForm = document.getElementById('product-form');
+    const productList = document.getElementById('product-list');
+
+    const nameInput = document.getElementById('name');
+    const priceInput = document.getElementById('price');
+    const locationInput = document.getElementById('location');
+
+    const nameFeedback = document.getElementById('nameFeedback');
+    const priceFeedback = document.getElementById('priceFeedback');
+    const locationFeedback = document.getElementById('locationFeedback');
+
+    let products = [];
+
+    // Real-time validation feedback
+    function validateName() {
+      const name = nameInput.value.trim();
+      if (!name) {
+        nameFeedback.textContent = 'Please enter product name';
+        nameInput.classList.add('invalid');
+        return false;
+      } else {
+        nameFeedback.textContent = '';
+        nameInput.classList.remove('invalid');
+        return true;
+      }
+    }
+
+    function validatePrice() {
+      const price = priceInput.value.trim();
+      if (!price) {
+        priceFeedback.textContent = 'Please enter price';
+        priceInput.classList.add('invalid');
+        return false;
+      } else if (parseFloat(price) < 1) {
+        priceFeedback.textContent = 'Price must be at least ₹1';
+        priceInput.classList.add('invalid');
+        return false;
+      } else {
+        priceFeedback.textContent = '';
+        priceInput.classList.remove('invalid');
+        return true;
+      }
+    }
+
+    function validateLocation() {
+      const location = locationInput.value.trim();
+      if (!location) {
+        locationFeedback.textContent = 'Please enter location';
+        locationInput.classList.add('invalid');
+        return false;
+      } else {
+        locationFeedback.textContent = '';
+        locationInput.classList.remove('invalid');
+        return true;
+      }
+    }
+
+    nameInput.addEventListener('input', validateName);
+    priceInput.addEventListener('input', validatePrice);
+    locationInput.addEventListener('input', validateLocation);
+
+    productForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const isNameValid = validateName();
+      const isPriceValid = validatePrice();
+      const isLocationValid = validateLocation();
+
+      if (!isNameValid || !isPriceValid || !isLocationValid) {
+        // If any field invalid, do not proceed
+        return;
+      }
+
+      const product = {
+        name: nameInput.value.trim(),
+        price: parseFloat(priceInput.value.trim()),
+        location: locationInput.value.trim()
+      };
+
+      products.push(product);
+      displayProducts();
+      productForm.reset();
+
+      // Clear feedback after reset
+      nameFeedback.textContent = '';
+      priceFeedback.textContent = '';
+      locationFeedback.textContent = '';
+
+      // Remove invalid styles
+      nameInput.classList.remove('invalid');
+      priceInput.classList.remove('invalid');
+      locationInput.classList.remove('invalid');
+    });
+
+    function displayProducts() {
+      productList.innerHTML = '';
+
+      products.forEach(({ name, price, location }) => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <h3>${name}</h3>
+          <p>Price: ₹${price.toFixed(2)}</p>
+          <p>Location: ${location}</p>
+        `;
+        productList.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
